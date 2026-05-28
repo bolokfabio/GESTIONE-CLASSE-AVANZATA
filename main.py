@@ -6,7 +6,6 @@ app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-# lista studenti
 studenti = []
 
 
@@ -21,68 +20,47 @@ def home():
 
 @app.get("/add")
 def add_get(nome: str, voto: float):
-
-    global studenti
-
-    # aggiunge studente
-    studenti.append({
-        "nome": nome,
-        "voto": voto
-    })
-
-    return {"messaggio": "aggiunto GET"}
+    return {"messaggio": "GET ricevuto"}
 
 
 @app.post("/add")
 def add_post(nome: str = Form(...), voto: float = Form(...)):
 
-    global studenti
-
-    # aggiunge studente
     studenti.append({
         "nome": nome,
         "voto": voto
     })
 
-    return {"messaggio": "aggiunto POST"}
+    return {"messaggio": "studente aggiunto"}
 
 
 # =========================
-# 🔵 LISTA STUDENTI
+# 🔵 LISTA
 # =========================
 
 @app.get("/lista")
 def lista_get():
-
     return studenti
 
 
 @app.post("/lista")
 def lista_post():
-
     return studenti
 
 
 # =========================
-# 🔵 MEDIA CLASSE
+# 🔵 MEDIA
 # =========================
 
 @app.get("/media")
 def media_get():
 
-    # controlla lista vuota
     if len(studenti) == 0:
         return {"media": 0}
 
-    somma = 0
+    somma = sum(s["voto"] for s in studenti)
 
-    # somma voti
-    for s in studenti:
-        somma += s["voto"]
-
-    media = somma / len(studenti)
-
-    return {"media": round(media, 2)}
+    return {"media": round(somma / len(studenti), 2)}
 
 
 @app.post("/media")
@@ -91,14 +69,9 @@ def media_post():
     if len(studenti) == 0:
         return {"media": 0}
 
-    somma = 0
+    somma = sum(s["voto"] for s in studenti)
 
-    for s in studenti:
-        somma += s["voto"]
-
-    media = somma / len(studenti)
-
-    return {"media": round(media, 2)}
+    return {"media": round(somma / len(studenti), 2)}
 
 
 # =========================
@@ -107,26 +80,9 @@ def media_post():
 
 @app.get("/promossi")
 def promossi_get():
-
-    promossi = []
-
-    # prende solo voti >= 6
-    for s in studenti:
-
-        if s["voto"] >= 6:
-            promossi.append(s)
-
-    return promossi
+    return [s for s in studenti if s["voto"] >= 6]
 
 
 @app.post("/promossi")
 def promossi_post():
-
-    promossi = []
-
-    for s in studenti:
-
-        if s["voto"] >= 6:
-            promossi.append(s)
-
-    return promossi
+    return [s for s in studenti if s["voto"] >= 6]
