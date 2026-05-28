@@ -1,13 +1,13 @@
 from fastapi import FastAPI, Form
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-import pandas as pd
 
 app = FastAPI()
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
-df = pd.DataFrame(columns=["nome", "voto"])
+# lista studenti
+studenti = []
 
 
 @app.get("/")
@@ -22,10 +22,13 @@ def home():
 @app.get("/add")
 def add_get(nome: str, voto: float):
 
-    global df
+    global studenti
 
-    df = pd.concat([df, pd.DataFrame([[nome, voto]], columns=["nome", "voto"])],
-                   ignore_index=True)
+    # aggiunge studente
+    studenti.append({
+        "nome": nome,
+        "voto": voto
+    })
 
     return {"messaggio": "aggiunto GET"}
 
@@ -33,10 +36,13 @@ def add_get(nome: str, voto: float):
 @app.post("/add")
 def add_post(nome: str = Form(...), voto: float = Form(...)):
 
-    global df
+    global studenti
 
-    df = pd.concat([df, pd.DataFrame([[nome, voto]], columns=["nome", "voto"])],
-                   ignore_index=True)
+    # aggiunge studente
+    studenti.append({
+        "nome": nome,
+        "voto": voto
+    })
 
     return {"messaggio": "aggiunto POST"}
 
@@ -47,12 +53,14 @@ def add_post(nome: str = Form(...), voto: float = Form(...)):
 
 @app.get("/lista")
 def lista_get():
-    return df.to_dict(orient="records")
+
+    return studenti
 
 
 @app.post("/lista")
 def lista_post():
-    return df.to_dict(orient="records")
+
+    return studenti
 
 
 # =========================
@@ -62,19 +70,35 @@ def lista_post():
 @app.get("/media")
 def media_get():
 
-    if len(df) == 0:
+    # controlla lista vuota
+    if len(studenti) == 0:
         return {"media": 0}
 
-    return {"media": round(df["voto"].mean(), 2)}
+    somma = 0
+
+    # somma voti
+    for s in studenti:
+        somma += s["voto"]
+
+    media = somma / len(studenti)
+
+    return {"media": round(media, 2)}
 
 
 @app.post("/media")
 def media_post():
 
-    if len(df) == 0:
+    if len(studenti) == 0:
         return {"media": 0}
 
-    return {"media": round(df["voto"].mean(), 2)}
+    somma = 0
+
+    for s in studenti:
+        somma += s["voto"]
+
+    media = somma / len(studenti)
+
+    return {"media": round(media, 2)}
 
 
 # =========================
@@ -84,10 +108,25 @@ def media_post():
 @app.get("/promossi")
 def promossi_get():
 
-    return df[df["voto"] >= 6].to_dict(orient="records")
+    promossi = []
+
+    # prende solo voti >= 6
+    for s in studenti:
+
+        if s["voto"] >= 6:
+            promossi.append(s)
+
+    return promossi
 
 
 @app.post("/promossi")
 def promossi_post():
 
-    return df[df["voto"] >= 6].to_dict(orient="records")
+    promossi = []
+
+    for s in studenti:
+
+        if s["voto"] >= 6:
+            promossi.append(s)
+
+    return promossi
